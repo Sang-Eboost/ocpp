@@ -136,32 +136,6 @@ func (handler *CentralSystemHandler) OnStartTransaction(chargePointId string, re
 }
 
 // Remote start transaction
-//func (handler *CentralSystemHandler) OnRemoteStartTransaction(chargePointId string, request *core.RemoteStartTransactionRequest) (confirmation *core.RemoteStartTransactionConfirmation, err error) {
-//	info, ok := handler.chargePoints[chargePointId]
-//	if !ok {
-//		return nil, fmt.Errorf("unknown charge point %v", chargePointId)
-//	}
-//
-//	connector := info.getConnector(*request.ConnectorId)
-//	if connector.currentTransaction >= 0 {
-//		return nil, fmt.Errorf("connector %v is currently busy with another transaction", request.ConnectorId)
-//	}
-//
-//	transaction := &TransactionInfo{}
-//	transaction.idTag = request.IdTag
-//	transaction.connectorId = *request.ConnectorId
-//	// transaction.startMeter = request.MeterStart
-//	// transaction.startTime = request.Timestamp
-//	transaction.id = nextTransactionId
-//
-//	nextTransactionId += 1
-//	connector.currentTransaction = transaction.id
-//	info.transactions[transaction.id] = transaction
-//
-//	logDefault(chargePointId, request.GetFeatureName()).Infof("started transaction %v for connector %v", transaction.id, transaction.connectorId)
-//	return core.NewRemoteStartTransactionConfirmation(types.RemoteStartStopStatusAccepted), nil
-//}
-
 func (handler *CentralSystemHandler) OnRemoteStartTransaction(chargePointID string, request *core.RemoteStartTransactionRequest) (*core.RemoteStartTransactionConfirmation, error) {
 	// Kiểm tra nếu ChargePoint đã được kết nối
 	chargePointState, ok := handler.chargePoints[chargePointID]
@@ -184,22 +158,46 @@ func (handler *CentralSystemHandler) OnRemoteStartTransaction(chargePointID stri
 }
 
 // Remote stop transaction
-func (handler *CentralSystemHandler) OnRemoteStopTransaction(chargePointId string, request *core.RemoteStopTransactionRequest) (confirmation *core.RemoteStopTransactionConfirmation, err error) {
-	info, ok := handler.chargePoints[chargePointId]
-	if !ok {
-		return nil, fmt.Errorf("unknown charge point %v", chargePointId)
+//func (handler *CentralSystemHandler) OnRemoteStopTransaction(chargePointId string, request *core.RemoteStopTransactionRequest) (confirmation *core.RemoteStopTransactionConfirmation, err error) {
+//	info, ok := handler.chargePoints[chargePointId]
+//	if !ok {
+//		return nil, fmt.Errorf("unknown charge point %v", chargePointId)
+//	}
+//
+//	transaction, ok := info.transactions[request.TransactionId]
+//	if ok {
+//		connector := info.getConnector(transaction.connectorId)
+//		connector.currentTransaction = -1
+//		//transaction.endTime = request.Timestamp
+//		//transaction.endMeter = request.MeterStop
+//
+//	}
+//
+//	logDefault(chargePointId, request.GetFeatureName()).Infof("stopped transaction %v - %v", request.TransactionId)
+//	return core.NewRemoteStopTransactionConfirmation(types.RemoteStartStopStatusAccepted), nil
+//}
+
+func (h *CentralSystemHandler) OnRemoteStopTransaction(chargePointID string, request *core.RemoteStopTransactionRequest) (confirmation *core.RemoteStopTransactionConfirmation, err error) {
+	// Kiểm tra xem trạm sạc có tồn tại trong hệ thống không
+	chargePoint, exists := h.chargePoints[chargePointID]
+	if !exists {
+		log.Printf("Charge point %s not found", chargePointID)
+		return core.NewRemoteStopTransactionConfirmation(types.RemoteStartStopStatusRejected), nil
 	}
 
-	transaction, ok := info.transactions[request.TransactionId]
-	if ok {
-		connector := info.getConnector(transaction.connectorId)
-		connector.currentTransaction = -1
-		//transaction.endTime = request.Timestamp
-		//transaction.endMeter = request.MeterStop
-
+	// Tìm giao dịch với TransactionID tương ứng
+	transaction, exists := chargePoint.transactions[request.TransactionId]
+	if !exists {
+		log.Printf("Transaction ID %d not found on charge point %s", request.TransactionId, chargePointID)
+		return core.NewRemoteStopTransactionConfirmation(types.RemoteStartStopStatusRejected), nil
 	}
 
-	logDefault(chargePointId, request.GetFeatureName()).Infof("stopped transaction %v - %v", request.TransactionId)
+	// Logic để dừng giao dịch
+	// Bạn có thể thêm logic cụ thể để xử lý việc dừng giao dịch tại đây
+	transaction.hasTransactionEnded()
+	log.Printf("Transaction ID %d on charge point %s stopped", request.TransactionId, chargePointID)
+
+	// Trả về xác nhận rằng giao dịch đã được dừng
 	return core.NewRemoteStopTransactionConfirmation(types.RemoteStartStopStatusAccepted), nil
 }
 

@@ -188,20 +188,6 @@ func exampleRoutine(chargePointID string, handler *CentralSystemHandler) {
 		return
 	}
 
-	// Remote start transaction
-	//cb7 := func(confirmation *core.RemoteStartTransactionConfirmation, err error) {
-	//	if err != nil {
-	//		logDefault(chargePointID, core.RemoteStartTransactionFeatureName).Errorf("error on request: %v", err)
-	//	} else {
-	//		logDefault(chargePointID, confirmation.GetFeatureName()).Infof("status: %v", confirmation.Status)
-	//	}
-	//}
-	//e = centralSystem.RemoteStartTransaction(chargePointID, cb7, clientIdTag)
-	//if e != nil {
-	//	logDefault(chargePointID, core.RemoteStartTransactionFeatureName).Errorf("couldn't send message: %v", e)
-	//	return
-	//}
-
 	cb7 := func(confirmation *core.RemoteStartTransactionConfirmation, err error) {
 		fmt.Println("------------->", confirmation.Status)
 		confirmation.Status = types.RemoteStartStopStatusAccepted
@@ -221,6 +207,28 @@ func exampleRoutine(chargePointID string, handler *CentralSystemHandler) {
 	})
 	if err != nil {
 		logDefault(chargePointID, core.RemoteStartTransactionFeatureName).Errorf("couldn't send message: %v", err)
+	}
+
+	time.Sleep(10 * time.Second)
+
+	// Remote stop transaction
+	cb8 := func(confirmation *core.RemoteStopTransactionConfirmation, err error) {
+		fmt.Println("cb8------------->", confirmation.Status)
+		confirmation.Status = types.RemoteStartStopStatusAccepted
+		fmt.Println("cb8-after------------->", confirmation.Status)
+		if err != nil {
+			logDefault(chargePointID, core.RemoteStopTransactionFeatureName).Errorf("error on request: %v", err)
+		} else if confirmation.Status == types.RemoteStartStopStatusAccepted {
+			logDefault(chargePointID, confirmation.GetFeatureName()).Infof("remote stop transaction accepted")
+		} else {
+			logDefault(chargePointID, confirmation.GetFeatureName()).Infof("remote stop transaction rejected")
+		}
+	}
+
+	transactionID := 1 // ID của giao dịch mà bạn muốn dừng
+	err = centralSystem.RemoteStopTransaction(chargePointID, cb8, transactionID)
+	if err != nil {
+		logDefault(chargePointID, core.RemoteStopTransactionFeatureName).Errorf("couldn't send message: %v", err)
 	}
 }
 
