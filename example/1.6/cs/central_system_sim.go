@@ -204,7 +204,13 @@ func exampleRoutine(chargePointID string, handler *CentralSystemHandler) {
 
 	cb7 := func(confirmation *core.RemoteStartTransactionConfirmation, err error) {
 		fmt.Println("------------->", confirmation.Status)
-		confirmation.Status = types.RemoteStartStopStatusAccepted
+		check, _ := fmt.Scanln("Enter 1 to accept or 2 to reject")
+		if check == 1 {
+			confirmation.Status = types.RemoteStartStopStatusAccepted
+		} else {
+			confirmation.Status = types.RemoteStartStopStatusRejected
+		}
+
 		fmt.Println("after------------->", confirmation.Status)
 		if err != nil {
 			logDefault(chargePointID, core.RemoteStartTransactionFeatureName).Errorf("error on request: %v", err)
