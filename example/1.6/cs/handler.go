@@ -194,7 +194,11 @@ func (h *CentralSystemHandler) OnRemoteStopTransaction(chargePointID string, req
 
 	// Logic để dừng giao dịch
 	// Bạn có thể thêm logic cụ thể để xử lý việc dừng giao dịch tại đây
-	transaction.hasTransactionEnded()
+	connector := chargePoint.getConnector(transaction.connectorId)
+	connector.currentTransaction = -1
+	transaction.endTime = types.NewDateTime(time.Now())
+	transaction.endMeter = 0
+
 	log.Printf("Transaction ID %d on charge point %s stopped", request.TransactionId, chargePointID)
 
 	// Trả về xác nhận rằng giao dịch đã được dừng
