@@ -187,6 +187,7 @@ func exampleRoutine(chargePointID string, handler *CentralSystemHandler) {
 		logDefault(chargePointID, remotetrigger.TriggerMessageFeatureName).Errorf("couldn't send message: %v", e)
 		return
 	}
+	time.Sleep(5 * time.Second)
 
 	cb7 := func(confirmation *core.RemoteStartTransactionConfirmation, err error) {
 		fmt.Println("------------->", confirmation.Status)
@@ -215,7 +216,7 @@ func exampleRoutine(chargePointID string, handler *CentralSystemHandler) {
 		logDefault(chargePointID, core.RemoteStartTransactionFeatureName).Errorf("couldn't send message: %v", err)
 	}
 
-	time.Sleep(30 * time.Second)
+	time.Sleep(100 * time.Second)
 
 	// Remote stop transaction
 	cb8 := func(confirmation *core.RemoteStopTransactionConfirmation, err error) {
