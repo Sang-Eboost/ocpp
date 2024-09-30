@@ -208,6 +208,31 @@ func (handler *CentralSystemHandler) OnStopTransaction(chargePointId string, req
 	return core.NewStopTransactionConfirmation(), nil
 }
 
+func (handler *CentralSystemHandler) OnGetConfiguration(chargePointId string, request *core.GetConfigurationRequest) (confirmation *core.GetConfigurationConfirmation, err error) {
+	logDefault(chargePointId, request.GetFeatureName()).Infof("requested configuration keys: %v", request.Key)
+
+	// // Return a response with the requested keys
+	// configuration := make(map[string]core.ConfigurationKey)
+	// configuration["MaxKeys"] = core.ConfigurationKey{Key: "MaxKeys", Readonly: true}
+	// configuration["HeartbeatInterval"] = core.ConfigurationKey{Key: "HeartbeatInterval", Readonly: false}
+	// configuration["SomeOtherKey"] = core.ConfigurationKey{Key: "SomeOtherKey", Readonly: false}
+
+	// Check which keys are requested
+	response := core.GetConfigurationConfirmation{ConfigurationKey: make([]core.ConfigurationKey, 0)}
+	configuration := make(map[string]core.ConfigurationKey) // Define the configuration map
+	for _, key := range request.Key {
+		if val, exists := configuration[key]; exists {
+			response.ConfigurationKey = append(response.ConfigurationKey, val)
+		}
+	}
+
+	fmt.Printf("Returning configuration: %v\n", response)
+
+	// Return the response
+	return &response, nil
+
+}
+
 // ------------- Firmware management profile callbacks -------------
 
 func (handler *CentralSystemHandler) OnDiagnosticsStatusNotification(chargePointId string, request *firmware.DiagnosticsStatusNotificationRequest) (confirmation *firmware.DiagnosticsStatusNotificationConfirmation, err error) {

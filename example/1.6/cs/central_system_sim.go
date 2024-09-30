@@ -212,7 +212,7 @@ func exampleRoutine(chargePointID string, handler *CentralSystemHandler) {
 		logDefault(chargePointID, core.RemoteStartTransactionFeatureName).Errorf("couldn't send message: %v", err)
 	}
 
-	time.Sleep(100 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	// Remote stop transaction
 	cb8 := func(confirmation *core.RemoteStopTransactionConfirmation, err error) {
@@ -228,11 +228,14 @@ func exampleRoutine(chargePointID string, handler *CentralSystemHandler) {
 		}
 	}
 
-	transactionID := 0 // ID của giao dịch mà bạn muốn dừng
+	transactionID := 0
+	// ID của giao dịch mà bạn muốn dừng
 	err = centralSystem.RemoteStopTransaction(chargePointID, cb8, transactionID)
 	if err != nil {
 		logDefault(chargePointID, core.RemoteStopTransactionFeatureName).Errorf("couldn't send message: %v", err)
 	}
+	time.Sleep(10 * time.Second)
+
 }
 
 // Start function

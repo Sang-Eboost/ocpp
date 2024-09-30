@@ -89,10 +89,16 @@ func (handler *ChargePointHandler) OnDataTransfer(request *core.DataTransferRequ
 }
 
 func (handler *ChargePointHandler) OnGetConfiguration(request *core.GetConfigurationRequest) (confirmation *core.GetConfigurationConfirmation, err error) {
+	fmt.Println("request------->",request)
+	fmt.Println("request.Key------->",request.Key)
+	fmt.Println("handler.configuration------->",handler.configuration)
+
 	var resultKeys []core.ConfigurationKey
 	var unknownKeys []string
 	for _, key := range request.Key {
 		configKey, ok := handler.configuration[key]
+		fmt.Println("handler.configuration[key]------->",handler.configuration[key])
+		fmt.Println("configKey------->",configKey)
 		if !ok {
 			unknownKeys = append(unknownKeys, *configKey.Value)
 		} else {
