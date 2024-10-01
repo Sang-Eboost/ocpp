@@ -70,64 +70,6 @@ func setupTlsChargePoint(chargePointID string) ocpp16.ChargePoint {
 	return ocpp16.NewChargePoint(chargePointID, nil, client)
 }
 
-// exampleRoutine simulates a charge point flow, where
-// func exampleRoutine(chargePoint ocpp16.ChargePoint, stateHandler *ChargePointHandler) {
-// 	dummyClientIdTag := "VN0123100099"
-// 	chargingConnector := 1
-// 	// Boot
-// 	bootConf, err := chargePoint.BootNotification("model1", "vendor1")
-// 	checkError(err)
-// 	logDefault(bootConf.GetFeatureName()).Infof("status: %v, interval: %v, current time: %v", bootConf.Status, bootConf.Interval, bootConf.CurrentTime.String())
-// 	// Notify connector status
-// 	updateStatus(stateHandler, 0, core.ChargePointStatusAvailable)
-// 	// Wait for some time ...
-// 	time.Sleep(5 * time.Second)
-// 	// Simulate charging for connector 1
-// 	authConf, err := chargePoint.Authorize(dummyClientIdTag)
-// 	checkError(err)
-// 	logDefault(authConf.GetFeatureName()).Infof("status: %v %v", authConf.IdTagInfo.Status, getExpiryDate(authConf.IdTagInfo))
-// 	// Update connector status
-// 	updateStatus(stateHandler, chargingConnector, core.ChargePointStatusPreparing)
-// 	// Start transaction
-// 	startConf, err := chargePoint.StartTransaction(chargingConnector, dummyClientIdTag, stateHandler.meterValue, types.NewDateTime(time.Now()))
-// 	checkError(err)
-// 	logDefault(startConf.GetFeatureName()).Infof("status: %v, transaction %v %v", startConf.IdTagInfo.Status, startConf.TransactionId, getExpiryDate(startConf.IdTagInfo))
-// 	stateHandler.connectors[chargingConnector].currentTransaction = startConf.TransactionId
-// 	// Update connector status
-// 	updateStatus(stateHandler, chargingConnector, core.ChargePointStatusCharging)
-// 	// Periodically send meter values
-// 	for i := 0; i < 100000; i++ {
-// 		sampleInterval, ok := stateHandler.configuration.getInt(MeterValueSampleInterval)
-// 		if !ok {
-// 			sampleInterval = 5
-// 		}
-// 		time.Sleep(time.Second * time.Duration(sampleInterval))
-// 		stateHandler.meterValue += 10
-// 		sampledValue := types.SampledValue{Value: fmt.Sprintf("%v", stateHandler.meterValue), Unit: types.UnitOfMeasureWh, Format: types.ValueFormatRaw, Measurand: types.MeasurandEnergyActiveExportRegister, Context: types.ReadingContextSamplePeriodic, Location: types.LocationOutlet}
-// 		meterValue := types.MeterValue{Timestamp: types.NewDateTime(time.Now()), SampledValue: []types.SampledValue{sampledValue}}
-// 		meterConf, err := chargePoint.MeterValues(chargingConnector, []types.MeterValue{meterValue})
-// 		checkError(err)
-// 		logDefault(meterConf.GetFeatureName()).Infof("sent updated %v", sampledValue.Measurand)
-// 	}
-// 	stateHandler.meterValue += 2
-// 	// Stop charging for connector 1
-// 	updateStatus(stateHandler, chargingConnector, core.ChargePointStatusFinishing)
-// 	stopConf, err := chargePoint.StopTransaction(stateHandler.meterValue, types.NewDateTime(time.Now()), startConf.TransactionId, func(request *core.StopTransactionRequest) {
-// 		sampledValue := types.SampledValue{Value: fmt.Sprintf("%v", stateHandler.meterValue), Unit: types.UnitOfMeasureWh, Format: types.ValueFormatRaw, Measurand: types.MeasurandEnergyActiveExportRegister, Context: types.ReadingContextSamplePeriodic, Location: types.LocationOutlet}
-// 		meterValue := types.MeterValue{Timestamp: types.NewDateTime(time.Now()), SampledValue: []types.SampledValue{sampledValue}}
-// 		request.TransactionData = []types.MeterValue{meterValue}
-// 		request.Reason = core.ReasonEVDisconnected
-// 	})
-// 	checkError(err)
-// 	logDefault(stopConf.GetFeatureName()).Infof("transaction %v stopped", startConf.TransactionId)
-// 	// Update connector status
-// 	updateStatus(stateHandler, chargingConnector, core.ChargePointStatusAvailable)
-// 	// Wait for some time ...
-// 	time.Sleep(5 * 24 * time.Hour)
-
-// }
-
-
 func exampleRoutine(chargePoint ocpp16.ChargePoint, stateHandler *ChargePointHandler) {
 	dummyClientIdTag := "VN0123100099"
 	chargingConnector := 1
@@ -162,6 +104,20 @@ func exampleRoutine(chargePoint ocpp16.ChargePoint, stateHandler *ChargePointHan
 		}
 	}()
 
+	// Goroutine to send heartbeat every 1 minute
+	go func() {
+		for {
+			time.Sleep(1 * time.Minute)
+
+			heartbeatConf, err := chargePoint.Heartbeat() // Gửi heartbeat
+			if err != nil {
+				logDefault("Heartbeat").Errorf("Error sending heartbeat: %v", err)
+				continue
+			}
+			logDefault(heartbeatConf.GetFeatureName()).Infof("Heartbeat sent, status: %v", heartbeatConf.CurrentTime.String())
+		}
+	}()
+
 	// Goroutine to send meter values every 2 minutes, starting after 2 minutes
 	go func() {
 		time.Sleep(1 * time.Minute) // Initial delay of 2 minutes
@@ -169,12 +125,12 @@ func exampleRoutine(chargePoint ocpp16.ChargePoint, stateHandler *ChargePointHan
 			time.Sleep(1 * time.Minute)
 			stateHandler.meterValue += 10
 			sampledValue := types.SampledValue{
-				Value:    fmt.Sprintf("%v", stateHandler.meterValue),
-				Unit:     types.UnitOfMeasureWh,
-				Format:   types.ValueFormatRaw,
+				Value:     fmt.Sprintf("%v", stateHandler.meterValue),
+				Unit:      types.UnitOfMeasureWh,
+				Format:    types.ValueFormatRaw,
 				Measurand: types.MeasurandEnergyActiveExportRegister,
-				Context:  types.ReadingContextSamplePeriodic,
-				Location: types.LocationOutlet,
+				Context:   types.ReadingContextSamplePeriodic,
+				Location:  types.LocationOutlet,
 			}
 			meterValue := types.MeterValue{
 				Timestamp:    types.NewDateTime(time.Now()),
@@ -191,12 +147,12 @@ func exampleRoutine(chargePoint ocpp16.ChargePoint, stateHandler *ChargePointHan
 	updateStatus(stateHandler, chargingConnector, core.ChargePointStatusFinishing)
 	stopConf, err := chargePoint.StopTransaction(stateHandler.meterValue, types.NewDateTime(time.Now()), startConf.TransactionId, func(request *core.StopTransactionRequest) {
 		sampledValue := types.SampledValue{
-			Value:    fmt.Sprintf("%v", stateHandler.meterValue),
-			Unit:     types.UnitOfMeasureWh,
-			Format:   types.ValueFormatRaw,
+			Value:     fmt.Sprintf("%v", stateHandler.meterValue),
+			Unit:      types.UnitOfMeasureWh,
+			Format:    types.ValueFormatRaw,
 			Measurand: types.MeasurandEnergyActiveExportRegister,
-			Context:  types.ReadingContextSamplePeriodic,
-			Location: types.LocationOutlet,
+			Context:   types.ReadingContextSamplePeriodic,
+			Location:  types.LocationOutlet,
 		}
 		meterValue := types.MeterValue{
 			Timestamp:    types.NewDateTime(time.Now()),
@@ -212,9 +168,6 @@ func exampleRoutine(chargePoint ocpp16.ChargePoint, stateHandler *ChargePointHan
 	// Wait for some time ...
 	time.Sleep(5 * 24 * time.Hour)
 }
-
-
-
 
 // Start function
 func main() {
