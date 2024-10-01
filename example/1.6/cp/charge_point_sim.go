@@ -72,7 +72,7 @@ func setupTlsChargePoint(chargePointID string) ocpp16.ChargePoint {
 
 // exampleRoutine simulates a charge point flow, where
 func exampleRoutine(chargePoint ocpp16.ChargePoint, stateHandler *ChargePointHandler) {
-	dummyClientIdTag := "12345"
+	dummyClientIdTag := "VN0123100039"
 	chargingConnector := 1
 	// Boot
 	bootConf, err := chargePoint.BootNotification("model1", "vendor1")
