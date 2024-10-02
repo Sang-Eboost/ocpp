@@ -73,8 +73,19 @@ func setupTlsChargePoint(chargePointID string) ocpp16.ChargePoint {
 func exampleRoutine(chargePoint ocpp16.ChargePoint, stateHandler *ChargePointHandler) {
 	dummyClientIdTag := "VN0123100099"
 	chargingConnector := 1
+
 	// Boot
-	bootConf, err := chargePoint.BootNotification("model1", "vendor1")
+	bootConf, err := chargePoint.BootNotification("model1", "vendor1", func(request *core.BootNotificationRequest) {
+		request.ChargePointModel = "model1"
+		request.ChargePointVendor = "vendor1"
+		request.ChargePointSerialNumber = "SN1"
+		request.ChargeBoxSerialNumber = "CB1"
+		request.FirmwareVersion = "1.0"
+		request.Iccid = "ICCID1"
+		request.Imsi = "IMSI1"
+		request.MeterType = "meter1"
+		request.MeterSerialNumber = "MS1"
+	})
 	checkError(err)
 	logDefault(bootConf.GetFeatureName()).Infof("status: %v, interval: %v, current time: %v", bootConf.Status, bootConf.Interval, bootConf.CurrentTime.String())
 	// Notify connector status
@@ -119,28 +130,10 @@ func exampleRoutine(chargePoint ocpp16.ChargePoint, stateHandler *ChargePointHan
 	}()
 
 	// Goroutine to send meter values every 2 minutes, starting after 2 minutes
-	go func() {
-		time.Sleep(1 * time.Minute) // Initial delay of 2 minutes
-		for {
-			time.Sleep(1 * time.Minute)
-			stateHandler.meterValue += 10
-			sampledValue := types.SampledValue{
-				Value:     fmt.Sprintf("%v", stateHandler.meterValue),
-				Unit:      types.UnitOfMeasureWh,
-				Format:    types.ValueFormatRaw,
-				Measurand: types.MeasurandEnergyActiveExportRegister,
-				Context:   types.ReadingContextSamplePeriodic,
-				Location:  types.LocationOutlet,
-			}
-			meterValue := types.MeterValue{
-				Timestamp:    types.NewDateTime(time.Now()),
-				SampledValue: []types.SampledValue{sampledValue},
-			}
-			meterConf, err := chargePoint.MeterValues(chargingConnector, []types.MeterValue{meterValue})
-			checkError(err)
-			logDefault(meterConf.GetFeatureName()).Infof("Sent updated %v", sampledValue.Measurand)
-		}
-	}()
+	// go func() {
+	// 	time.Sleep(1 * time.Minute) // Initial delay of 2 minutes
+	// 	go MeterValue(stateHandler, chargingConnector)
+	// }()
 
 	// Continue other operations
 	// Stop charging for connector 1
@@ -234,4 +227,26 @@ func init() {
 // Utility functions
 func logDefault(feature string) *logrus.Entry {
 	return log.WithField("message", feature)
+}
+
+func MeterValue(stateHandler *ChargePointHandler, chargingConnector int) {
+	for {
+		time.Sleep(1 * time.Minute)
+		stateHandler.meterValue += 10
+		sampledValue := types.SampledValue{
+			Value:     fmt.Sprintf("%v", stateHandler.meterValue),
+			Unit:      types.UnitOfMeasureWh,
+			Format:    types.ValueFormatRaw,
+			Measurand: types.MeasurandEnergyActiveExportRegister,
+			Context:   types.ReadingContextSamplePeriodic,
+			Location:  types.LocationOutlet,
+		}
+		meterValue := types.MeterValue{
+			Timestamp:    types.NewDateTime(time.Now()),
+			SampledValue: []types.SampledValue{sampledValue},
+		}
+		meterConf, err := chargePoint.MeterValues(chargingConnector, []types.MeterValue{meterValue})
+		checkError(err)
+		logDefault(meterConf.GetFeatureName()).Infof("Sent updated %v", sampledValue.Measurand)
+	}
 }

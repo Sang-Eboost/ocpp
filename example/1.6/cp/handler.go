@@ -89,16 +89,16 @@ func (handler *ChargePointHandler) OnDataTransfer(request *core.DataTransferRequ
 }
 
 func (handler *ChargePointHandler) OnGetConfiguration(request *core.GetConfigurationRequest) (confirmation *core.GetConfigurationConfirmation, err error) {
-	fmt.Println("request------->",request)
-	fmt.Println("request.Key------->",request.Key)
-	fmt.Println("handler.configuration------->",handler.configuration)
+	fmt.Println("request------->", request)
+	fmt.Println("request.Key------->", request.Key)
+	fmt.Println("handler.configuration------->", handler.configuration)
 
 	var resultKeys []core.ConfigurationKey
 	var unknownKeys []string
 	for _, key := range request.Key {
 		configKey, ok := handler.configuration[key]
-		fmt.Println("handler.configuration[key]------->",handler.configuration[key])
-		fmt.Println("configKey------->",configKey)
+		fmt.Println("handler.configuration[key]------->", handler.configuration[key])
+		fmt.Println("configKey------->", configKey)
 		if !ok {
 			unknownKeys = append(unknownKeys, *configKey.Value)
 		} else {
@@ -118,6 +118,9 @@ func (handler *ChargePointHandler) OnGetConfiguration(request *core.GetConfigura
 }
 
 func (handler *ChargePointHandler) OnRemoteStartTransaction(request *core.RemoteStartTransactionRequest) (confirmation *core.RemoteStartTransactionConfirmation, err error) {
+	connectorID := 1
+	request.ConnectorId = &connectorID
+	fmt.Println("request------->", request)
 	if request.ConnectorId != nil {
 		connector, ok := handler.connectors[*request.ConnectorId]
 		fmt.Println("connector-------->", connector)
@@ -129,6 +132,7 @@ func (handler *ChargePointHandler) OnRemoteStartTransaction(request *core.Remote
 		}
 		logDefault(request.GetFeatureName()).Infof("started transaction %v on connector %v", connector.currentTransaction, request.ConnectorId)
 		connector.currentTransaction = *request.ConnectorId
+		go MeterValue(handler, *request.ConnectorId)
 		return core.NewRemoteStartTransactionConfirmation(types.RemoteStartStopStatusAccepted), nil
 	}
 	logDefault(request.GetFeatureName()).Errorf("couldn't start a transaction for %v without a connectorID", request.IdTag)
