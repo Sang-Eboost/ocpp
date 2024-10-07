@@ -27,8 +27,8 @@ const (
 	envVarServerPort           = "SERVER_LISTEN_PORT"
 	envVarTls                  = "true"
 	envVarCaCertificate        = "CA_CERTIFICATE_PATH"
-	envVarServerCertificate    = "~/cert/cert.pem"
-	envVarServerCertificateKey = "~/cert/privkey.pem"
+	envVarServerCertificate    = "/ocpp/example/1.6/cs/cert/cert.pem"
+	envVarServerCertificateKey = "/ocpp/example/1.6/cs/cert/privkey.pem"
 )
 
 var log *logrus.Logger
@@ -63,14 +63,11 @@ func setupTlsCentralSystem() ocpp16.CentralSystem {
 			log.Fatalf("couldn't read CA certificate from %v", caCertificate)
 		}
 	}
-	// certificate, ok := os.LookupEnv(envVarServerCertificate)
-	certificate := "/cert/cert.pem"
+	certificate, ok := os.LookupEnv(envVarServerCertificate)
 	if !ok {
 		log.Fatalf("no required %v found", envVarServerCertificate)
 	}
-
-	// key, ok := os.LookupEnv(envVarServerCertificateKey)
-	key := "/cert/privkey.pem"
+	key, ok := os.LookupEnv(envVarServerCertificateKey)
 	if !ok {
 		log.Fatalf("no required %v found", envVarServerCertificateKey)
 	}
