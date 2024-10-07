@@ -249,8 +249,9 @@ func main() {
 		log.Printf("no valid %v environment variable found, using default port", envVarServerPort)
 	}
 	// Check if TLS enabled
-	t, _ := os.LookupEnv(envVarTls)
-	tlsEnabled, _ := strconv.ParseBool(t)
+	// t, _ := os.LookupEnv(envVarTls)
+	// tlsEnabled, _ := strconv.ParseBool(t)
+	tlsEnabled := true
 	// Prepare OCPP 1.6 central system
 	if tlsEnabled {
 		centralSystem = setupTlsCentralSystem()
