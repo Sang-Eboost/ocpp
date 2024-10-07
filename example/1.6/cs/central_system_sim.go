@@ -64,13 +64,13 @@ func setupTlsCentralSystem() ocpp16.CentralSystem {
 		}
 	}
 	// certificate, ok := os.LookupEnv(envVarServerCertificate)
-	certificate := "~/cert/cert.pem"
+	certificate := "/cert/cert.pem"
 	if !ok {
 		log.Fatalf("no required %v found", envVarServerCertificate)
 	}
 
 	// key, ok := os.LookupEnv(envVarServerCertificateKey)
-	key := "~/cert/privkey.pem"
+	key := "/cert/privkey.pem"
 	if !ok {
 		log.Fatalf("no required %v found", envVarServerCertificateKey)
 	}
