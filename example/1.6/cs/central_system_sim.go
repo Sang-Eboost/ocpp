@@ -25,10 +25,10 @@ const (
 	defaultListenPort          = 8887
 	defaultHeartbeatInterval   = 600
 	envVarServerPort           = "SERVER_LISTEN_PORT"
-	envVarTls                  = "TLS_ENABLED"
+	envVarTls                  = "true"
 	envVarCaCertificate        = "CA_CERTIFICATE_PATH"
-	envVarServerCertificate    = "SERVER_CERTIFICATE_PATH"
-	envVarServerCertificateKey = "SERVER_CERTIFICATE_KEY_PATH"
+	envVarServerCertificate    = "~/cert/cert.pem"
+	envVarServerCertificateKey = "~/cert/privkey.pem"
 )
 
 var log *logrus.Logger
