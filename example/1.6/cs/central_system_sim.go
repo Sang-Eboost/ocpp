@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"time"
@@ -27,7 +28,7 @@ const (
 	envVarServerPort           = "SERVER_LISTEN_PORT"
 	envVarTls                  = "true"
 	envVarCaCertificate        = "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/chain.pem"
-	envVarServerCertificate    = "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/cert.pem" // Đường dẫn mới
+	envVarServerCertificate    = "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/cert.pem"
 	envVarServerCertificateKey = "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/privkey.pem"
 )
 
@@ -38,47 +39,103 @@ func setupCentralSystem() ocpp16.CentralSystem {
 	return ocpp16.NewCentralSystem(nil, nil)
 }
 
+// func setupTlsCentralSystem() ocpp16.CentralSystem {
+// 	var certPool *x509.CertPool
+// 	// Load CA certificates
+// 	// fmt.Println("----->", os.Getenv(envVarCaCertificate))
+// 	// fmt.Println("----->", os.Getenv(envVarServerCertificate))
+// 	// // fmt.Println("----->", os.Getenv(envVarServerCertificateKey))
+// 	// certFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/cert.pem"
+// 	// keyFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/privkey.pem"
+// 	// caCertFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/chain.pem"
+// 	caCertificate, ok := os.LookupEnv(envVarCaCertificate)
+// 	if !ok {
+// 		log.Infof("no %v found, using system CA pool", envVarCaCertificate)
+// 		systemPool, err := x509.SystemCertPool()
+// 		if err != nil {
+// 			log.Fatalf("couldn't get system CA pool: %v", err)
+// 		}
+// 		certPool = systemPool
+// 	} else {
+// 		certPool = x509.NewCertPool()
+// 		data, err := os.ReadFile(caCertificate)
+// 		if err != nil {
+// 			log.Fatalf("couldn't read CA certificate from %v: %v", caCertificate, err)
+// 		}
+// 		ok = certPool.AppendCertsFromPEM(data)
+// 		if !ok {
+// 			log.Fatalf("couldn't read CA certificate from %v", caCertificate)
+// 		}
+// 	}
+// 	certificate, ok := os.LookupEnv(envVarServerCertificate)
+// 	if !ok {
+// 		log.Fatalf("no required %v found", envVarServerCertificate)
+// 	}
+// 	key, ok := os.LookupEnv(envVarServerCertificateKey)
+// 	if !ok {
+// 		log.Fatalf("no required %v found", envVarServerCertificateKey)
+// 	}
+// 	server := ws.NewTLSServer(certificate, key, &tls.Config{
+// 		ClientAuth: tls.RequireAndVerifyClientCert,
+// 		ClientCAs:  certPool,
+// 	})
+// 	return ocpp16.NewCentralSystem(nil, server)
+// }
+
 func setupTlsCentralSystem() ocpp16.CentralSystem {
-	var certPool *x509.CertPool
 	// Load CA certificates
-	// fmt.Println("----->", os.Getenv(envVarCaCertificate))
-	// fmt.Println("----->", os.Getenv(envVarServerCertificate))
-	// // fmt.Println("----->", os.Getenv(envVarServerCertificateKey))
-	// certFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/cert.pem"
-	// keyFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/privkey.pem"
-	// caCertFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/chain.pem"
-	caCertificate, ok := os.LookupEnv(envVarCaCertificate)
-	if !ok {
-		log.Infof("no %v found, using system CA pool", envVarCaCertificate)
+	caCertPath := envVarCaCertificate
+	certPool := x509.NewCertPool()
+	if _, err := os.Stat(caCertPath); os.IsNotExist(err) {
+		log.Printf("No %v found, using system CA pool", caCertPath)
 		systemPool, err := x509.SystemCertPool()
 		if err != nil {
-			log.Fatalf("couldn't get system CA pool: %v", err)
+			log.Fatalf("Couldn't get system CA pool: %v", err)
 		}
 		certPool = systemPool
 	} else {
-		certPool = x509.NewCertPool()
-		data, err := os.ReadFile(caCertificate)
+		caCert, err := ioutil.ReadFile(caCertPath)
 		if err != nil {
-			log.Fatalf("couldn't read CA certificate from %v: %v", caCertificate, err)
+			log.Fatalf("Couldn't read CA certificate from %v: %v", caCertPath, err)
 		}
-		ok = certPool.AppendCertsFromPEM(data)
+		ok := certPool.AppendCertsFromPEM(caCert)
 		if !ok {
-			log.Fatalf("couldn't read CA certificate from %v", caCertificate)
+			log.Fatalf("Couldn't append CA certificate from %v", caCertPath)
 		}
 	}
-	certificate, ok := os.LookupEnv(envVarServerCertificate)
-	if !ok {
-		log.Fatalf("no required %v found", envVarServerCertificate)
+
+	// Load server certificate and key
+	certPath := envVarServerCertificate
+	keyPath := envVarServerCertificateKey
+
+	if _, err := os.Stat(certPath); os.IsNotExist(err) {
+		log.Fatalf("No required server certificate found at %v", certPath)
 	}
-	key, ok := os.LookupEnv(envVarServerCertificateKey)
-	if !ok {
-		log.Fatalf("no required %v found", envVarServerCertificateKey)
+	if _, err := os.Stat(keyPath); os.IsNotExist(err) {
+		log.Fatalf("No required server certificate key found at %v", keyPath)
 	}
-	server := ws.NewTLSServer(certificate, key, &tls.Config{
-		ClientAuth: tls.RequireAndVerifyClientCert,
-		ClientCAs:  certPool,
-	})
+
+	// Load the certificate pair
+	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
+	if err != nil {
+		log.Fatalf("Couldn't load server certificate and key: %v", err)
+	}
+
+	// Create TLS configuration
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    certPool,
+	}
+
+	// Initialize WebSocket TLS server
+	server := ws.NewTLSServer(certPath, keyPath, tlsConfig)
+
+	// Return central system with the configured server
+	fmt.Println("Central System TLS setup done")
+
 	return ocpp16.NewCentralSystem(nil, server)
+
 }
 
 // Run for every connected Charge Point, to simulate some functionality
