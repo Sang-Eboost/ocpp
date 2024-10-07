@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	logg"log"
 )
 
 func main() {
@@ -16,13 +17,13 @@ func main() {
 	// Tải chứng chỉ và khóa riêng
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		log.Fatalf("Không thể tải cert/key pair: %v", err)
+		logg.Fatalf("Không thể tải cert/key pair: %v", err)
 	}
 
 	// Tạo pool CA và thêm chứng chỉ CA
 	caCert, err := ioutil.ReadFile(caCertFile)
 	if err != nil {
-		log.Fatalf("Không thể đọc CA cert: %v", err)
+		logg.Fatalf("Không thể đọc CA cert: %v", err)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
