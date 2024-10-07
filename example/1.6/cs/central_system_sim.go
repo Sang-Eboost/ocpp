@@ -27,8 +27,8 @@ const (
 	envVarServerPort           = "SERVER_LISTEN_PORT"
 	envVarTls                  = "true"
 	envVarCaCertificate        = "CA_CERTIFICATE_PATH"
-    envVarServerCertificate    = "example/1.6/cs/cert/cert.pem"
-    envVarServerCertificateKey = "example/1.6/cs/cert/privkey.pem"
+    envVarServerCertificate    = "/example/1.6/cs/cert/cert.pem"
+    envVarServerCertificateKey = "/example/1.6/cs/cert/privkey.pem"
 )
 
 var log *logrus.Logger
