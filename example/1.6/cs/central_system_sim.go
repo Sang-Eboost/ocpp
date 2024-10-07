@@ -41,6 +41,9 @@ func setupCentralSystem() ocpp16.CentralSystem {
 func setupTlsCentralSystem() ocpp16.CentralSystem {
 	var certPool *x509.CertPool
 	// Load CA certificates
+	fmt.Println("----->", os.Getenv(envVarCaCertificate))
+	fmt.Println("----->", os.Getenv(envVarServerCertificate))
+	fmt.Println("----->", os.Getenv(envVarServerCertificateKey))
 	caCertificate, ok := os.LookupEnv(envVarCaCertificate)
 	if !ok {
 		log.Infof("no %v found, using system CA pool", envVarCaCertificate)
