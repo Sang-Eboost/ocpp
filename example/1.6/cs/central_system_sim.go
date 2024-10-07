@@ -26,9 +26,9 @@ const (
 	defaultHeartbeatInterval   = 600
 	envVarServerPort           = "SERVER_LISTEN_PORT"
 	envVarTls                  = "true"
-	envVarCaCertificate        = "CA_CERTIFICATE_PATH"
-	envVarServerCertificate    = ".ocpp-go/example/1.6/cs/cert.pem" // Đường dẫn mới
-	envVarServerCertificateKey = ".ocpp-go/example/1.6/cs/privkey.pem"
+	envVarCaCertificate        = "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/chain.pem"
+	envVarServerCertificate    = "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/cert.pem" // Đường dẫn mới
+	envVarServerCertificateKey = "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/privkey.pem"
 )
 
 var log *logrus.Logger
@@ -43,7 +43,10 @@ func setupTlsCentralSystem() ocpp16.CentralSystem {
 	// Load CA certificates
 	// fmt.Println("----->", os.Getenv(envVarCaCertificate))
 	// fmt.Println("----->", os.Getenv(envVarServerCertificate))
-	// fmt.Println("----->", os.Getenv(envVarServerCertificateKey))
+	// // fmt.Println("----->", os.Getenv(envVarServerCertificateKey))
+	// certFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/cert.pem"
+	// keyFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/privkey.pem"
+	// caCertFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/chain.pem"
 	caCertificate, ok := os.LookupEnv(envVarCaCertificate)
 	if !ok {
 		log.Infof("no %v found, using system CA pool", envVarCaCertificate)
