@@ -34,14 +34,14 @@ func setupChargePoint(chargePointID string) ocpp16.ChargePoint {
 }
 
 func setupTlsChargePoint(chargePointID string) ocpp16.ChargePoint {
+
+	certFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/cert.pem"
+	keyFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/privkey.pem"
+	caCertFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/chain.pem"
 	certPool, err := x509.SystemCertPool()
 	if err != nil {
 		log.Fatal(err)
 	}
-	certFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/cert.pem"
-	keyFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/privkey.pem"
-	caCertFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/chain.pem"
-
 	// Load CA cert
 	caPath, ok := os.LookupEnv(caCertFile)
 	if ok {
