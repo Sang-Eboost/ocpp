@@ -44,7 +44,7 @@ func setupTlsChargePoint(chargePointID string) ocpp16.ChargePoint {
 	// Load CA cert
 	caPath, ok := os.LookupEnv(caCertFile)
 	log.Info("ca.cert file found", caPath)
-	if ok {
+	if !ok {
 		caCert, err := os.ReadFile(caPath)
 
 		if err != nil {
