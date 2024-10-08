@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -148,9 +147,10 @@ func main() {
 		return
 	}
 	// Check if TLS enabled
-	t, _ := os.LookupEnv(envVarTls)
-	tlsEnabled, _ := strconv.ParseBool(t)
+	// t, _ := os.LookupEnv(envVarTls)
+	// tlsEnabled, _ := strconv.ParseBool(t)
 	// Prepare OCPP 1.6 charge point (chargePoint variable is defined in handler.go)
+	tlsEnabled := true
 	if tlsEnabled {
 		chargePoint = setupTlsChargePoint(id)
 	} else {
