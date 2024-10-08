@@ -56,18 +56,18 @@ func setupTlsChargePoint(chargePointID string) ocpp16.ChargePoint {
 		log.Info("no ca.cert file found, will use system CA certificates")
 	}
 	// Load client certificate
-	clientCertPath, ok1 := os.LookupEnv(certFile)
-	clientKeyPath, ok2 := os.LookupEnv(keyFile)
+	clientCertPath := certFile
+	clientKeyPath := keyFile
 	var clientCertificates []tls.Certificate
-	if ok1 && ok2 {
-		certificate, err := tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
-		fmt.Println("certificate", clientCertPath, clientKeyPath)
-		if err == nil {
-			clientCertificates = []tls.Certificate{certificate}
-		} else {
-			log.Infof("couldn't load client TLS certificate: %v", err)
-		}
+	// if ok1 && ok2 {
+	certificate, err := tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
+	fmt.Println("certificate", clientCertPath, clientKeyPath)
+	if err == nil {
+		clientCertificates = []tls.Certificate{certificate}
+	} else {
+		log.Infof("couldn't load client TLS certificate: %v", err)
 	}
+	// }
 	// Create client with TLS config
 	client := ws.NewTLSClient(&tls.Config{
 		RootCAs:      certPool,
