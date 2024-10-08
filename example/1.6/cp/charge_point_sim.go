@@ -37,15 +37,16 @@ func setupTlsChargePoint(chargePointID string) ocpp16.ChargePoint {
 	certPool, err := x509.SystemCertPool()
 	if err != nil {
 		log.Fatal(err)
-	}	
+	}
 	certFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/cert.pem"
-    keyFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/privkey.pem"
-    caCertFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/chain.pem"
+	keyFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/privkey.pem"
+	caCertFile := "/etc/letsencrypt/live/car-uat-ocpp.eboost.vn/chain.pem"
 
 	// Load CA cert
 	caPath, ok := os.LookupEnv(caCertFile)
 	if ok {
 		caCert, err := os.ReadFile(caPath)
+		fmt.Println("caCert", caPath)
 		if err != nil {
 			log.Warn(err)
 		} else if !certPool.AppendCertsFromPEM(caCert) {
@@ -60,6 +61,7 @@ func setupTlsChargePoint(chargePointID string) ocpp16.ChargePoint {
 	var clientCertificates []tls.Certificate
 	if ok1 && ok2 {
 		certificate, err := tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
+		fmt.Println("certificate", clientCertPath, clientKeyPath)
 		if err == nil {
 			clientCertificates = []tls.Certificate{certificate}
 		} else {
@@ -71,6 +73,7 @@ func setupTlsChargePoint(chargePointID string) ocpp16.ChargePoint {
 		RootCAs:      certPool,
 		Certificates: clientCertificates,
 	})
+	log.Info("Connecting with TLS")
 	return ocpp16.NewChargePoint(chargePointID, nil, client)
 }
 
